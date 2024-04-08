@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdint>
 #include <random>
+#include "puffinn/LshDatatypes/LshDatatype.hpp"
 
 namespace puffinn {
     // Number of bits used in filtering sketches.
@@ -12,7 +13,13 @@ namespace puffinn {
     // Number of bits used in hashes.
     const static unsigned int MAX_HASHBITS = 24;
     // The hash_pool concatenates hashes into a type twice as large to avoid overflow errors.
-    using LshDatatype = uint32_t;
+    
+    //---Working towards having LshDatatypes instead supporting different logical options.  
+    //using LshDatatype = uint32_t;
+
+
+    //This defines the current LshDatatype to be used -- would prefer to give this information as parameter to puffinn
+    using LshDatatype = EuclideanType<uint32_t>;
 
     std::default_random_engine generator(std::chrono::system_clock::now().time_since_epoch().count());
 

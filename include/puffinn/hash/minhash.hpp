@@ -239,7 +239,7 @@ namespace puffinn {
         }
 
         LshDatatype operator()(const std::vector<uint32_t>* const vec) const {
-            return hash(vec)%2;
+            return hash(vec)% LshDatatype(2);
         }
     };
 

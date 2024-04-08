@@ -5,6 +5,7 @@
 #include "puffinn/typedefs.hpp"
 #include "puffinn/performance.hpp"
 #include "puffinn/sorthash.hpp"
+#include "puffinn/LshDatatypes/LshDatatype.hpp"
 
 #include "omp.h"
 #include <algorithm>
@@ -103,7 +104,7 @@ namespace puffinn {
             hashes.resize(len);
             if (len != 0) {
                 in.read(reinterpret_cast<char*>(&indices[0]), len*sizeof(uint32_t));
-                in.read(reinterpret_cast<char*>(&hashes[0]), len*sizeof(LshDatatype));
+                in.read(reinterpret_cast<char*>(&hashes[0]), len*sizeof(LshDatatype)); //This i'm very concerned about - quick fix to see what happens
             }
 
             // TODO Handle serialization
@@ -169,16 +170,19 @@ namespace puffinn {
         void rebuild() {
             // A value whose prefix will never match that of a query vector, as long as less than 32
             // hash bits are used.
-            static const LshDatatype IMPOSSIBLE_PREFIX = 0xffffffff;
+            
+            // static const LshDatatype IMPOSSIBLE_PREFIX = 0xffffffff;
+
+            static const uint32_t IMPOSSIBLE_PREFIX = 0xffffffff;
 
             size_t rebuilding_data_size = 0;
             for (auto & rd : parallel_rebuilding_data) {
                 rebuilding_data_size += rd.size();
             }
 
-            std::vector<LshDatatype> tmp_hashes;
+            std::vector<uint32_t> tmp_hashes;
             std::vector<uint32_t> tmp_indices;
-            std::vector<LshDatatype> out_hashes;
+            std::vector<uint32_t> out_hashes;
             std::vector<uint32_t> out_indices;
             tmp_hashes.reserve(hashes.size() + rebuilding_data_size);
             tmp_indices.reserve(hashes.size() + rebuilding_data_size);
@@ -188,14 +192,14 @@ namespace puffinn {
             if (hashes.size() != 0) {
                 // Move data to temporary vector for sorting.
                 for (size_t i=SEGMENT_SIZE; i < hashes.size()-SEGMENT_SIZE; i++) {
-                    tmp_hashes.push_back(hashes[i]);
+                    tmp_hashes.push_back(hashes[i].getValue());
                     tmp_indices.push_back(indices[i]);
                 }
             }
             for (auto & rebuilding_data : parallel_rebuilding_data) {
                 for (auto pair : rebuilding_data) {
                     tmp_indices.push_back(pair.first);
-                    tmp_hashes.push_back(pair.second);
+                    tmp_hashes.push_back(pair.second.getValue());
                 }
             }
             

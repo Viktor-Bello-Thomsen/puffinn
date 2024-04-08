@@ -1,6 +1,7 @@
 #pragma once
 
 #include "puffinn/dataset.hpp"
+#include "puffinn/LshDatatypes/LshDatatype.hpp"
 #include "puffinn/hash_source/hash_source.hpp"
 
 namespace puffinn {
@@ -114,7 +115,7 @@ namespace puffinn {
             uint64_t res = 0;
             for (auto idx : indices) {
                 res <<= bits_per_function;
-                res |= hashes[idx];
+                res |= hashes[idx].value; //hashes[idx];
             }
             return res;
         }
@@ -142,7 +143,7 @@ namespace puffinn {
             pool.reserve(hash_functions.size());
 
             for (size_t i = 0; i < hash_functions.size(); i++) {
-                pool.push_back(hash_functions[i](input));
+                pool.push_back(hash_functions[i](input).getValue());
             }
 
             for (size_t rep = 0; rep < num_tables; rep++) {

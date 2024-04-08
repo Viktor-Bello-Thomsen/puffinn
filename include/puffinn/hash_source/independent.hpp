@@ -78,7 +78,7 @@ namespace puffinn {
                 uint64_t res = 0;
                 for (unsigned int i=0; i < functions_per_hasher; i++) {
                     res <<= bits_per_function;
-                    res |= hash_functions[offset+i](input);
+                    res |= (hash_functions[offset+i](input)).getValue(); //Need to consider using LshDataType here to maintain bit length consistency between data types- this is just a quick fix
                 }
                 res >>= bits_to_cut;
                 output[rep] = res;
