@@ -5,12 +5,13 @@
 
 template <typename dataType>
 struct LshDatatype{
-dataType value;    
-protected:
+    
     // virtual bool operator<= (LshDatatype<dataType> const& other) const = 0;
     // virtual bool prefix_eq(LshDatatype<dataType> const& other, uint32_t prefix_length) const = 0;
     // virtual bool operator< (LshDatatype<dataType> const& other) const = 0;
 
+
+    dataType value;    
 public:
     virtual dataType getValue() const = 0;
 };
@@ -22,12 +23,6 @@ template <typename dataType>
 struct EuclideanType: public LshDatatype<dataType> //How should I set the scope? private/protected/public
 {
 public:
-    EuclideanType(){}
-
-    EuclideanType(uint32_t value){
-        this->value = value;
-    }
-
     // bool operator<= (LshDatatype<dataType> const &other) const override {
     //     return this->value <= other.value;
     // }
@@ -36,6 +31,19 @@ public:
     //     return 0;
     // }
 
+    // dataType operator&(LshDatatype<dataType> other) const {
+    //     return this->getValue() & other.getValue();
+    // }
+
+    // bool operator< (LshDatatype<dataType> const& other) const override{
+    //     return this->value < other.getValue();
+    // }
+
+    EuclideanType(){}
+
+    EuclideanType(uint32_t value){
+        this->value = value;
+    }
 
     dataType operator>>(unsigned int shift_amount) const {
         return this->value >> shift_amount;
@@ -45,38 +53,28 @@ public:
         return this->value & bits;
     }
 
-    // dataType operator&(LshDatatype<dataType> other) const {
-    //     return this->getValue() & other.getValue();
-    // }
-
     dataType operator&(EuclideanType<dataType> other) const {
-        return this->getValue() & other.getValue();
+        return this->value & other.getValue();
     }
 
     dataType operator%(EuclideanType<dataType> other) const{
-        return this->getValue() % other.getValue();
+        return this->value % other.getValue();
     }
 
     bool operator== (EuclideanType<dataType> other) const{
-        return this->getValue() == other.getValue();
+        return this->value == other.getValue();
     }
 
     void operator<<= (int bits) {
         this->value = this->value << bits;
-        return; 
     }
-
-    // bool operator< (LshDatatype<dataType> const& other) const override{
-    //     return this->value < other.getValue();
-    // }
-
 
     bool operator< (EuclideanType<dataType> const& other) const{
         return this->value < other.getValue();
     }
 
     dataType getValue() const override{
-        return this->getValue();
+        return this->value;
     }
 
 };
