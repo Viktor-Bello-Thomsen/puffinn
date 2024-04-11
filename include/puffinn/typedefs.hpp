@@ -19,7 +19,7 @@ namespace puffinn {
 
 
     //This defines the current LshDatatype to be used -- would prefer to give this information as parameter to puffinn
-    using LshDatatype = EuclideanType<uint32_t>;
+    using LshDatatype = HammingType<uint32_t>;
 
     std::default_random_engine generator(std::chrono::system_clock::now().time_since_epoch().count());
 
