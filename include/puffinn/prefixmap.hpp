@@ -180,50 +180,68 @@ namespace puffinn {
                 rebuilding_data_size += rd.size();
             }
 
-            std::vector<uint32_t> tmp_hashes;
+            std::vector<LshDatatype> tmp_hashes;
             std::vector<uint32_t> tmp_indices;
-            std::vector<uint32_t> out_hashes;
-            std::vector<uint32_t> out_indices;
+            //std::vector<LshDatatype> out_hashes;
+            //std::vector<uint32_t> out_indices;
             tmp_hashes.reserve(hashes.size() + rebuilding_data_size);
             tmp_indices.reserve(hashes.size() + rebuilding_data_size);
-            out_hashes.reserve(hashes.size() + rebuilding_data_size);
-            out_indices.reserve(hashes.size() + rebuilding_data_size);
+            // out_hashes.reserve(hashes.size() + rebuilding_data_size);
+            // out_indices.reserve(hashes.size() + rebuilding_data_size);
 
             if (hashes.size() != 0) {
                 // Move data to temporary vector for sorting.
                 for (size_t i=SEGMENT_SIZE; i < hashes.size()-SEGMENT_SIZE; i++) {
-                    tmp_hashes.push_back(hashes[i].getValue());
+                    tmp_hashes.push_back(hashes[i]);
                     tmp_indices.push_back(indices[i]);
                 }
             }
             for (auto & rebuilding_data : parallel_rebuilding_data) {
                 for (auto pair : rebuilding_data) {
                     tmp_indices.push_back(pair.first);
-                    tmp_hashes.push_back(pair.second.getValue());
+                    tmp_hashes.push_back(pair.second);
                 }
             }
             
-            puffinn::sort_hashes_pairs_24(
-                tmp_hashes,
-                out_hashes,
-                tmp_indices,
-                out_indices
-            );
+            //FIX ME 
+            //(they use 2 lists to alternate sorting i.e. we just need out hashes to contain the sorted values and idx to correspond to them)
+            //ALTERNATION
+            //implemented default sorting (i.e. sort_two_lists) instead of matteos noice histogram sorting
+
+            // puffinn::sort_hashes_pairs_24(
+            //     tmp_hashes,
+            //     out_hashes,
+            //     tmp_indices,
+            //     out_indices
+            // );
+
+            puffinn::sort_two_lists(tmp_hashes, tmp_indices);
+
+
 
             // Pad with SEGMENT_SIZE values on each size to remove need for bounds check.
             hashes.clear();
-            hashes.reserve(out_hashes.size() + 2*SEGMENT_SIZE);
+            hashes.reserve(tmp_hashes.size() + 2*SEGMENT_SIZE);
             indices.clear();
-            indices.reserve(out_hashes.size() + 2*SEGMENT_SIZE);
+            indices.reserve(tmp_hashes.size() + 2*SEGMENT_SIZE);
+
+            //FIX ME
+            //Contains the out_hashes in hashes padded with some huge boundary value - this should not be default as we no longer work with fixed sized hashes
+            
 
             for (int i=0; i < SEGMENT_SIZE; i++) {
                 hashes.push_back(IMPOSSIBLE_PREFIX);
                 indices.push_back(0);
             }
-            for (size_t i = 0; i < out_hashes.size(); i++) {
-                indices.push_back(out_indices[i]);
-                hashes.push_back(out_hashes[i]);
+
+            //ALTERNATION
+            //No longer uses out_indicies/hashes - just tmp_*
+
+            for (size_t i = 0; i < tmp_hashes.size(); i++) {
+                indices.push_back(tmp_indices[i]);
+                hashes.push_back(tmp_hashes[i]);
             }
+
             for (int i=0; i < SEGMENT_SIZE; i++) {
                 hashes.push_back(IMPOSSIBLE_PREFIX);
                 indices.push_back(0);

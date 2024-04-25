@@ -51,8 +51,20 @@ public:
         this->value = value;
     }
 
+    // HammingType(HammingType<dataType> &other){
+    //     this->value = other.getValue();
+    // }
+
     dataType operator>>(unsigned int shift_amount) const override {
         return this->value >> shift_amount;
+    }
+
+    void operator>>=(unsigned int shift_amount) {
+        this->value >>= shift_amount;
+    }
+
+    void operator|=(HammingType<dataType> mask){
+        this->value |= mask.getValue();
     }
 
     dataType operator&(unsigned int bits) const override {
@@ -76,7 +88,7 @@ public:
     }
 
 
-    bool prefix_eq(LshDatatype<dataType> const &other, uint32_t prefix_length) const override{
+    bool prefix_eq(LshDatatype<dataType> const &other, uint32_t prefix_length) const {
         return 0;
     }
 
