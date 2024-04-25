@@ -115,7 +115,7 @@ namespace puffinn {
             uint64_t res = 0;
             for (auto idx : indices) {
                 res <<= bits_per_function;
-                res |= hashes[idx].value; //hashes[idx];
+                res |= hashes[idx].getValue(); //hashes[idx];
             }
             return res;
         }
