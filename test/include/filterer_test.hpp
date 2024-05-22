@@ -14,7 +14,7 @@ namespace filterer_test {
         dataset.insert(std::vector<float>({1, 0}));
         dataset.insert(std::vector<float>({-1, 0}));
 
-        IndependentHashArgs<SimHash> hash_args;
+        IndependentHashArgs<SimHash, SketchDataType> hash_args;//FIX ME, I'm not quite sure what is better to test for as I currently made Filter always construct on the sketches anyway (i.e. LshDataType makes little sense to me)
         Filterer<SimHash> filterer(hash_args, dataset.get_description());
 
         filterer.add_sketches(dataset, 0);
@@ -50,7 +50,7 @@ namespace filterer_test {
             dataset.insert(UnitVectorFormat::generate_random(DIMENSIONS));
         }
 
-        IndependentHashArgs<SimHash> hash_args;
+        IndependentHashArgs<SimHash, SketchDataType> hash_args;
         Filterer<SimHash> filterer(hash_args, dataset.get_description());
         filterer.add_sketches(dataset, 0);
 

@@ -2,13 +2,13 @@
 
 #include <stdint.h>
 
-
 template <typename dataType>
-struct LshDatatype{
+struct LshDatatype_DECL{
     
     // virtual bool operator< (LshDatatype<dataType> const& other) const = 0;
     // virtual bool operator<= (LshDatatype<dataType> const& other) const = 0;
     // virtual bool prefix_eq(LshDatatype<dataType> const& other, uint32_t prefix_length) const = 0;
+    
     
     virtual dataType operator>>(unsigned int shift_amount) const = 0;
     virtual dataType operator&(unsigned int bits) const = 0;
@@ -19,11 +19,14 @@ public:
     virtual dataType getValue() const = 0;
 };
 
+//We should implement a concatenation function such that the hashsource has an easier time.
+
+
 //It might be better to not have any pure virtual functions and just have LshDataType 
 //Maintain basic functionality i.e. no more of operator<= (LshDatatype<dataType> const &other) type functions in subclass
 
 template <typename dataType>
-struct HammingType: public LshDatatype<dataType> //How should I set the scope? private/protected/public
+struct HammingType: public LshDatatype_DECL<dataType> //How should I set the scope? private/protected/public
 {
 public:
     // bool operator<= (LshDatatype<dataType> const &other) const override {
@@ -54,6 +57,10 @@ public:
     // HammingType(HammingType<dataType> &other){
     //     this->value = other.getValue();
     // }
+
+    dataType operator^(HammingType<uint64_t> other) const {
+        return this->value ^ other.getValue();
+    }
 
     dataType operator>>(unsigned int shift_amount) const override {
         return this->value >> shift_amount;
@@ -88,10 +95,13 @@ public:
     }
 
 
-    bool prefix_eq(LshDatatype<dataType> const &other, uint32_t prefix_length) const {
+    bool prefix_eq(LshDatatype_DECL<dataType> const &other, uint32_t prefix_length) const {
         return 0;
     }
 
+    HammingType<dataType> operator|(HammingType<dataType> const &other) const{
+        return this->value | other.getValue();
+    }
 
     dataType operator& (HammingType<dataType> const& other) const {
         return this->value & other.getValue();

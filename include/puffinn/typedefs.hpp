@@ -7,20 +7,19 @@
 
 namespace puffinn {
     // Number of bits used in filtering sketches.
-    const static unsigned int NUM_FILTER_HASHBITS = 64;
-    using FilterLshDatatype = uint64_t;
+    const static unsigned int NUM_FILTER_HASHBITS = 32;
+    using SketchDataType = HammingType<uint64_t>;
+
 
     // Number of bits used in hashes.
     const static unsigned int MAX_HASHBITS = 24;
+    using LshDatatype = HammingType<uint32_t>;
     // The hash_pool concatenates hashes into a type twice as large to avoid overflow errors.
     
     //---Working towards having LshDatatypes instead supporting different logical options.  
     //using LshDatatype = uint32_t;
-
-
-    //This defines the current LshDatatype to be used -- would prefer to give this information as parameter to puffinn
-    using LshDatatype = HammingType<uint64_t>;
-
+    
+    
     std::default_random_engine generator(std::chrono::system_clock::now().time_since_epoch().count());
 
     // Retrieve the default random engine, seeded once by the system clock.

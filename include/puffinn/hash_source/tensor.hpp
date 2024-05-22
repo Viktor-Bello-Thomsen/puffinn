@@ -35,9 +35,9 @@ namespace puffinn {
     // Contains two sets of hashfunctions. Hash values are constructed by interleaving one hash
     // from the first set with one from the second set. The used hash values are chosen so as
     // to avoid using the same combination twice.
-    template <typename T>
-    class TensoredHashSource : public HashSource<T> {
-        IndependentHashSource<T> independent_hash_source;
+    template <typename T, typename hashType>
+    class TensoredHashSource : public HashSource<T, hashType> {
+        IndependentHashSource<T, hashType> independent_hash_source;
         unsigned int num_hashers;
         unsigned int next_hash_idx = 0;
         unsigned int num_bits;
@@ -78,7 +78,7 @@ namespace puffinn {
 
         void hash_repetitions(
             const typename T::Sim::Format::Type * const input,
-            std::vector<uint64_t> & output
+            std::vector<hashType> & output
         ) const {
             // In order to avoid allocating a new vector to hold the tensored data
             // every time we hash something, we make the output vector a little bit larger:
@@ -93,7 +93,7 @@ namespace puffinn {
             independent_hash_source.hash_repetitions(input, output);
             output.resize(num_hashers + tensored_hashers);
             for (size_t i=0; i<tensored_hashers; i++) {
-                output[num_hashers+i] = intersperse_zero(output[i]);
+                output[num_hashers+i] = intersperse_zero(output[i].getValue());
             }
             size_t right_start = tensored_hashers / 2;
 
@@ -109,9 +109,9 @@ namespace puffinn {
 
             for(size_t rep=0; rep < num_hashers; rep++) {
                 auto index_pair = get_minimal_index_pair(rep);
-                uint32_t h_left = output[num_hashers + index_pair.first];
-                uint32_t h_right = output[num_hashers + right_start + index_pair.second];
-                uint32_t h = h_left | h_right;
+                hashType h_left = output[num_hashers + index_pair.first];
+                hashType h_right = output[num_hashers + right_start + index_pair.second];
+                hashType h = h_left | h_right;
                 output[rep] = h;
             }
             output.resize(num_hashers);
@@ -171,8 +171,8 @@ namespace puffinn {
     ///
     /// This means that the number of necessary hashes is only the square root of the number used for independent hashing. 
     /// However, this hash source does not perform well when targeting a high recall.
-    template <typename T>
-    struct TensoredHashArgs : public HashSourceArgs<T> {
+    template <typename T, typename hashType>
+    struct TensoredHashArgs : public HashSourceArgs<T, hashType> {
         typename T::Args args;
 
         TensoredHashArgs() = default;
@@ -188,12 +188,12 @@ namespace puffinn {
             args.serialize(out);
         }
 
-        std::unique_ptr<HashSource<T>> build(
+        std::unique_ptr<HashSource<T, hashType>> build(
             DatasetDescription<typename T::Sim::Format> desc,
             unsigned int num_tables,
             unsigned int num_bits
         ) const {
-            return std::make_unique<TensoredHashSource<T>> (
+            return std::make_unique<TensoredHashSource<T, hashType>> (
                 desc,
                 args,
                 num_tables,
@@ -201,8 +201,8 @@ namespace puffinn {
             );
         }
 
-        std::unique_ptr<HashSourceArgs<T>> copy() const {
-            return std::make_unique<TensoredHashArgs<T>>(*this);
+        std::unique_ptr<HashSourceArgs<T, hashType>> copy() const {
+            return std::make_unique<TensoredHashArgs<T, hashType>>(*this);
         }
 
         uint64_t memory_usage(
@@ -210,9 +210,9 @@ namespace puffinn {
             unsigned int num_tables,
             unsigned int num_bits
         ) const {
-            IndependentHashArgs<T> inner_args;
+            IndependentHashArgs<T, hashType> inner_args;
             auto inner_size = 2*std::ceil(std::sqrt(static_cast<float>(num_tables)));
-            return sizeof(TensoredHashSource<T>)
+            return sizeof(TensoredHashSource<T, hashType>)
                 + inner_args.memory_usage(dataset, inner_size, (num_bits+1)/2)
                 + inner_size*inner_args.function_memory_usage(dataset, num_bits);
         }
@@ -224,8 +224,8 @@ namespace puffinn {
             return 0; // we no longer use hash functions sampled from hash_sources
         }
 
-        std::unique_ptr<HashSource<T>> deserialize_source(std::istream& in) const {
-            return std::make_unique<TensoredHashSource<T>>(in);
+        std::unique_ptr<HashSource<T, hashType>> deserialize_source(std::istream& in) const {
+            return std::make_unique<TensoredHashSource<T, hashType>>(in);
         }
     };
 }
