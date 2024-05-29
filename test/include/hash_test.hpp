@@ -46,7 +46,7 @@ namespace hash {
             auto stored_vec = to_stored_type<typename T::Sim::Format>(vec, dataset.get_description());
             auto hash = hasher(stored_vec.get());
             REQUIRE(hash < possible_hashes);
-            hash_counts[hash.getValue()]++;
+            hash_counts[hash]++;
         }
 
         // Measure difference of distributions by summing the absolute difference.

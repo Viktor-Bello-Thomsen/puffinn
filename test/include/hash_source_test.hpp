@@ -1,6 +1,7 @@
 #pragma once
 
 #include "catch.hpp"
+#include <iostream>
 #include "puffinn/hash_source/pool.hpp"
 #include "puffinn/hash_source/independent.hpp"
 #include "puffinn/hash_source/tensor.hpp"
@@ -56,7 +57,7 @@ namespace hash_source {
             HashPoolArgs<SimHash, LshDatatype>(60).build(dimensions, samples, HASH_LENGTH),
             samples,
             HASH_LENGTH);
-        test_hashes<FHTCrossPolytopeHash>(
+        test_hashes<FHTCrossPolytopeHash, LshDatatype>(
             dimensions,
             HashPoolArgs<FHTCrossPolytopeHash, LshDatatype>(60).build(dimensions, samples, HASH_LENGTH),
             samples,
@@ -64,7 +65,7 @@ namespace hash_source {
     }
 
     TEST_CASE("HashPool sketches") {
-        const unsigned int HASH_LENGTH = 32;
+        const unsigned int HASH_LENGTH = 64;
         unsigned int samples = 100;
         Dataset<UnitVectorFormat> dataset(100);
         auto dimensions = dataset.get_description();

@@ -40,7 +40,7 @@ namespace filterer_test {
             REQUIRE(sketches.passes_filter(filterer.get_sketch(1, i), i));
         }
     }
-
+    
     TEST_CASE("All filtering bits used") {
         const int NUM_VECTORS = 20;
         const unsigned int DIMENSIONS = 100;
@@ -54,7 +54,7 @@ namespace filterer_test {
         Filterer<SimHash> filterer(hash_args, dataset.get_description());
         filterer.add_sketches(dataset, 0);
 
-        int bit_counts[NUM_FILTER_HASHBITS];
+        std::vector<int> bit_counts(NUM_FILTER_HASHBITS, 0);
         for (int idx=0; idx < NUM_VECTORS; idx++) {
             for (unsigned int sketch=0; sketch < NUM_SKETCHES; sketch++) {
                 for (unsigned int bit=0; bit < NUM_FILTER_HASHBITS; bit++) {
@@ -62,7 +62,7 @@ namespace filterer_test {
                         bit_counts[bit]++;
                     }
                 }
-            }
+            }       
         }
         for (unsigned int bit=0; bit < NUM_FILTER_HASHBITS; bit++) {
             REQUIRE(bit_counts[bit] != 0);

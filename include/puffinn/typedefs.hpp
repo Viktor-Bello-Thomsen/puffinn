@@ -7,7 +7,7 @@
 
 namespace puffinn {
     // Number of bits used in filtering sketches.
-    const static unsigned int NUM_FILTER_HASHBITS = 32;
+    const static unsigned int NUM_FILTER_HASHBITS = 64;
     using SketchDataType = HammingType<uint64_t>;
 
 

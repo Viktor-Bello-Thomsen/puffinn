@@ -1,7 +1,6 @@
 #pragma once
 
 #include "puffinn/dataset.hpp"
-#include "puffinn/LshDatatypes/LshDatatype.hpp"
 #include "puffinn/hash_source/hash_source.hpp"
 
 namespace puffinn {
@@ -108,17 +107,16 @@ namespace puffinn {
             out.write(reinterpret_cast<const char*>(&bits_to_cut), sizeof(unsigned int));
         }
 
-        uint64_t concatenate_hash(
-            const std::vector<unsigned int>& indices,
-            const LshDatatype* hashes
-        ) const {
-            uint64_t res = 0;
-            for (auto idx : indices) {
-                res <<= bits_per_function;
-                res |= hashes[idx].getValue(); //hashes[idx];
-            }
-            return res;
-        }
+
+        //?This was apparently never used anywhere?
+        // hashType concatenate_hash(
+        //     const std::vector<unsigned int>& indices,
+        //     const uint64_t* hashes //hashes are always 64bit unsigned ints
+        // ) const {
+        //     hashType res;
+        //     res.concatenate_hashes(indices, hashes, bits_per_function);  
+        //     return res;
+        // }
 
         unsigned int get_size() const {
             return hash_functions.size();
@@ -145,18 +143,19 @@ namespace puffinn {
             pool.reserve(hash_functions.size());
 
             for (size_t i = 0; i < hash_functions.size(); i++) {
-                pool.push_back(hash_functions[i](input).getValue());
+                pool.push_back(hash_functions[i](input));
             }
 
             for (size_t rep = 0; rep < num_tables; rep++) {
                 // Concatenate the hashes
-                uint64_t res = 0;
+                hashType res;
                 for (auto idx : indices[rep]) {
-                    res <<= bits_per_function;
-                    res |= pool[idx];
+                    res.concatenate_hash(pool[idx], bits_per_function);
                 }
-                output.push_back(res >> bits_to_cut);
+                res >>= bits_to_cut;
+                output.push_back(res);
             }
+
         }
 
         float icollision_probability(float p) const {

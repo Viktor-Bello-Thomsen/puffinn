@@ -10,8 +10,10 @@ struct LshDatatype_DECL{
     // virtual bool prefix_eq(LshDatatype<dataType> const& other, uint32_t prefix_length) const = 0;
     
     
-    virtual dataType operator>>(unsigned int shift_amount) const = 0;
-    virtual dataType operator&(unsigned int bits) const = 0;
+    virtual dataType operator>>(uint64_t shift_amount) const = 0;
+    virtual dataType operator&(uint64_t bits) const = 0;
+    virtual void concatenate_hashes(const std::vector<unsigned int>& indices, const uint64_t* hashes,const uint_fast8_t& bits_per_function) = 0;
+    virtual void concatenate_hash(const uint64_t& hash,const uint_fast8_t& bits_per_function) = 0;
     virtual void operator<<= (int bits) = 0; 
 
     dataType value;    
@@ -48,7 +50,9 @@ public:
     //     return this->getValue() < otherEuc->getValue();
     // }
 
-    HammingType(){}
+    HammingType(){
+        this->value = 0;
+    }
 
     HammingType(uint32_t value){
         this->value = value;
@@ -58,11 +62,30 @@ public:
     //     this->value = other.getValue();
     // }
 
+    void concatenate_hashes(
+        const std::vector<unsigned int>& indices, 
+        const uint64_t* hashes,
+        const uint_fast8_t& bits_per_function
+    ) override { 
+        for (auto idx : indices) {
+            this->value <<= bits_per_function;
+            this->value |= hashes[idx];
+        }
+    }
+
+    void concatenate_hash(
+        const uint64_t& hash,
+        const uint_fast8_t& bits_per_function
+    ) override {
+        this->value <<= bits_per_function;
+        this->value |= hash; 
+    }
+
     dataType operator^(HammingType<uint64_t> other) const {
         return this->value ^ other.getValue();
     }
 
-    dataType operator>>(unsigned int shift_amount) const override {
+    dataType operator>>(uint64_t shift_amount) const override {
         return this->value >> shift_amount;
     }
 
@@ -74,9 +97,10 @@ public:
         this->value |= mask.getValue();
     }
 
-    dataType operator&(unsigned int bits) const override {
+    dataType operator&(uint64_t bits) const override {
         return this->value & bits;
     }
+
 
     void operator<<= (int bits) override {
         this->value = this->value << bits;
