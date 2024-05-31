@@ -9,7 +9,7 @@
 #include "puffinn/hash_source/tensor.hpp"
 #include "puffinn/similarity_measure/cosine.hpp"
 #include "puffinn/similarity_measure/jaccard.hpp"
-
+#include <iostream>
 #include <sstream>
 
 namespace collection {
@@ -110,7 +110,7 @@ namespace collection {
         table.rebuild();
 
         for (auto k : ks) {
-            for (auto recall : recalls) {
+            for (auto recall : recalls) {                
                 int num_correct = 0;
                 auto adjusted_k = std::min(k, table.get_size());
                 

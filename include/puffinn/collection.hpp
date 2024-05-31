@@ -820,7 +820,7 @@ namespace puffinn {
                     missing_ring_vals -= (range_idx < buffers.num_ranges);
                     range_idx += (range.first == range.second);
                 }
-
+                
                 while (range_idx < buffers.num_ranges) {
                     uint_fast32_t num_passing_filter = 0;
                     // Can potentially add 4xRING_SIZE values to the buffer
@@ -958,7 +958,7 @@ namespace puffinn {
                     g_performance_metrics.start_timer(Computation::Filtering);
                 }
                 g_performance_metrics.store_time(Computation::Filtering);
-            }
+            } 
         }
 
         void serialize_chunk(std::ostream& out, size_t idx) const {

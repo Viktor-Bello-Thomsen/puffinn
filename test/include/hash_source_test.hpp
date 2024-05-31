@@ -1,7 +1,6 @@
 #pragma once
 
 #include "catch.hpp"
-#include <iostream>
 #include "puffinn/hash_source/pool.hpp"
 #include "puffinn/hash_source/independent.hpp"
 #include "puffinn/hash_source/tensor.hpp"
@@ -39,7 +38,7 @@ namespace hash_source {
                 }
             }
         }
-        
+
         for (unsigned int bit=0; bit < hash_length; bit++) {
             // All bits used.
             REQUIRE(bit_occurences[bit] > 0);
@@ -48,7 +47,7 @@ namespace hash_source {
     }
 
     TEST_CASE("HashPool hashes") {
-        const unsigned int HASH_LENGTH = 24;
+        const unsigned int HASH_LENGTH = MAX_HASHBITS;
         unsigned int samples = 100;
         Dataset<UnitVectorFormat> dataset(100);
         auto dimensions = dataset.get_description();
@@ -65,7 +64,7 @@ namespace hash_source {
     }
 
     TEST_CASE("HashPool sketches") {
-        const unsigned int HASH_LENGTH = 64;
+        const unsigned int HASH_LENGTH = NUM_FILTER_HASHBITS;
         unsigned int samples = 100;
         Dataset<UnitVectorFormat> dataset(100);
         auto dimensions = dataset.get_description();
@@ -78,7 +77,7 @@ namespace hash_source {
 
 
     TEST_CASE("Independent hashes") {
-        const unsigned int HASH_LENGTH = 24;
+        const unsigned int HASH_LENGTH = MAX_HASHBITS;
         const unsigned int NUM_HASHES = 100;
 
         Dataset<UnitVectorFormat> dataset(100);
@@ -97,7 +96,7 @@ namespace hash_source {
 
 
     TEST_CASE("Tensored hashes") {
-        const unsigned int HASH_LENGTH = 24;
+        const unsigned int HASH_LENGTH = MAX_HASHBITS;
         const unsigned int NUM_HASHES = 100;
 
         Dataset<UnitVectorFormat> dataset(100);

@@ -2,19 +2,7 @@
 
 #include "puffinn/hash_source/independent.hpp"
 
-namespace puffinn {
-    uint64_t intersperse_zero(int64_t val) {
-        uint64_t mask = 1;
-        uint64_t shift = 0;
-
-        uint64_t res = 0;
-        for (unsigned i=0; i < sizeof(uint64_t)*8/2; i++) {
-            res |= (val & mask) << shift;
-            mask <<= 1;
-            shift++;
-        }
-        return res;
-    }
+namespace puffinn {    
 
     // Helper function for getting indices to tensor.
     //
@@ -40,7 +28,7 @@ namespace puffinn {
         IndependentHashSource<T, hashType> independent_hash_source;
         unsigned int num_hashers;
         unsigned int next_hash_idx = 0;
-        unsigned int num_bits;
+        unsigned int num_bits;   
 
     public:
         TensoredHashSource(
@@ -93,12 +81,12 @@ namespace puffinn {
             independent_hash_source.hash_repetitions(input, output);
             output.resize(num_hashers + tensored_hashers);
             for (size_t i=0; i<tensored_hashers; i++) {
-                output[num_hashers+i] = intersperse_zero(output[i].getValue());
+                output[num_hashers+i] = output[i].intersperse_zero();
             }
             size_t right_start = tensored_hashers / 2;
 
             if (num_bits % 2 == 0) {
-                for (size_t i=0; i < tensored_hashers / 2; i++) {
+                for (size_t i=0; i < right_start; i++) {
                     output[num_hashers + i] <<= 1;
                 }
             } else {
@@ -106,13 +94,12 @@ namespace puffinn {
                     output[num_hashers + i] >>= 1;
                 }
             }
-
+            unsigned int offset_right = num_hashers + right_start;
             for(size_t rep=0; rep < num_hashers; rep++) {
                 auto index_pair = get_minimal_index_pair(rep);
-                hashType h_left = output[num_hashers + index_pair.first];
-                hashType h_right = output[num_hashers + right_start + index_pair.second];
-                hashType h = h_left | h_right;
-                output[rep] = h;
+                hashType h_left  = output[num_hashers   + index_pair.first];
+                hashType h_right = output[offset_right  + index_pair.second];
+                output[rep] = h_left.interleave(h_right);
             }
             output.resize(num_hashers);
         }

@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 
-template <typename dataType>
 struct LshDatatype_DECL{
     
     // virtual bool operator< (LshDatatype<dataType> const& other) const = 0;
@@ -10,15 +9,13 @@ struct LshDatatype_DECL{
     // virtual bool prefix_eq(LshDatatype<dataType> const& other, uint32_t prefix_length) const = 0;
     
     
-    virtual dataType operator>>(uint64_t shift_amount) const = 0;
-    virtual dataType operator&(uint64_t bits) const = 0;
+    // virtual dataType operator>>(uint64_t shift_amount) const = 0;
+    // virtual dataType operator&(uint64_t bits) const = 0;
     virtual void concatenate_hashes(const std::vector<unsigned int>& indices, const uint64_t* hashes,const uint_fast8_t& bits_per_function) = 0;
     virtual void concatenate_hash(const uint64_t& hash,const uint_fast8_t& bits_per_function) = 0;
-    virtual void operator<<= (int bits) = 0; 
-
-    dataType value;    
+    virtual void operator<<= (int bits) = 0;     
 public:
-    virtual dataType getValue() const = 0;
+    //virtual dataType getValue() const = 0;
 };
 
 //We should implement a concatenation function such that the hashsource has an easier time.
@@ -28,9 +25,11 @@ public:
 //Maintain basic functionality i.e. no more of operator<= (LshDatatype<dataType> const &other) type functions in subclass
 
 template <typename dataType>
-struct HammingType: public LshDatatype_DECL<dataType> //How should I set the scope? private/protected/public
+struct HammingType: public LshDatatype_DECL //How should I set the scope? private/protected/public
 {
 public:
+
+    dataType value;
     // bool operator<= (LshDatatype<dataType> const &other) const override {
     //     return this->value <= other.value;
     // }
@@ -54,13 +53,9 @@ public:
         this->value = 0;
     }
 
-    HammingType(uint32_t value){
+    HammingType(dataType value){
         this->value = value;
     }
-
-    // HammingType(HammingType<dataType> &other){
-    //     this->value = other.getValue();
-    // }
 
     void concatenate_hashes(
         const std::vector<unsigned int>& indices, 
@@ -81,11 +76,29 @@ public:
         this->value |= hash; 
     }
 
+    HammingType<dataType> intersperse_zero() const {
+        dataType mask = 1;
+        dataType shift = 0;
+        dataType res = 0;
+        for (unsigned i=0; i < sizeof(dataType)*8/2; i++) {
+            res |= (this->value & mask) << shift;
+            mask <<= 1;
+            shift++;
+        }
+        return res;
+    }
+    
+    HammingType<dataType> interleave(const HammingType<dataType>& other) const {
+        return this->value | other.getValue();
+    }
+
+
+
     dataType operator^(HammingType<uint64_t> other) const {
         return this->value ^ other.getValue();
     }
 
-    dataType operator>>(uint64_t shift_amount) const override {
+    dataType operator>>(uint64_t shift_amount) const {
         return this->value >> shift_amount;
     }
 
@@ -97,7 +110,7 @@ public:
         this->value |= mask.getValue();
     }
 
-    dataType operator&(uint64_t bits) const override {
+    dataType operator&(uint64_t bits) const  {
         return this->value & bits;
     }
 
@@ -106,7 +119,7 @@ public:
         this->value = this->value << bits;
     }
 
-    dataType getValue() const override{
+    dataType getValue() const{
         return this->value;
     }
 
@@ -119,9 +132,9 @@ public:
     }
 
 
-    bool prefix_eq(LshDatatype_DECL<dataType> const &other, uint32_t prefix_length) const {
-        return 0;
-    }
+    // bool prefix_eq(LshDatatype_DECL<dataType> const &other, uint32_t prefix_length) const {
+    //     return 0;
+    // }
 
     HammingType<dataType> operator|(HammingType<dataType> const &other) const{
         return this->value | other.getValue();

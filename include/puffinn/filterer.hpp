@@ -30,6 +30,7 @@ namespace puffinn {
             return (sketch_diff <= max_sketch_diff);
         }
     };
+    
 
     template <typename T>
     class Filterer {

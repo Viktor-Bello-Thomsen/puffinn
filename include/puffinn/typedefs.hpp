@@ -7,13 +7,18 @@
 
 namespace puffinn {
     // Number of bits used in filtering sketches.
-    const static unsigned int NUM_FILTER_HASHBITS = 64;
+    static const unsigned int NUM_FILTER_HASHBITS = 64;
     using SketchDataType = HammingType<uint64_t>;
 
 
     // Number of bits used in hashes.
-    const static unsigned int MAX_HASHBITS = 24;
+    static const unsigned int MAX_HASHBITS = 24;
     using LshDatatype = HammingType<uint32_t>;
+
+    // static const LshDatatype IMPOSSIBLE_PREFIX = 0xffffffffffffffff;
+    static const LshDatatype IMPOSSIBLE_PREFIX = 0xffffffff;
+
+
     // The hash_pool concatenates hashes into a type twice as large to avoid overflow errors.
     
     //---Working towards having LshDatatypes instead supporting different logical options.  

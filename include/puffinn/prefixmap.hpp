@@ -54,7 +54,7 @@ namespace puffinn {
             }
             // Initially set to empty segment of index just above the prefix.
             prefix_end = prefix_start;
-            prefix_mask = 0xffffffff;
+            prefix_mask = IMPOSSIBLE_PREFIX;
         }
     };
 
@@ -171,10 +171,7 @@ namespace puffinn {
             // A value whose prefix will never match that of a query vector, as long as less than 32
             // hash bits are used.
             
-            // static const LshDatatype IMPOSSIBLE_PREFIX = 0xffffffff;
-
-            static const uint32_t IMPOSSIBLE_PREFIX = 0xffffffff;
-
+            
             size_t rebuilding_data_size = 0;
             for (auto & rd : parallel_rebuilding_data) {
                 rebuilding_data_size += rd.size();
@@ -182,13 +179,9 @@ namespace puffinn {
 
             std::vector<LshDatatype> tmp_hashes;
             std::vector<uint32_t> tmp_indices;
-            //std::vector<LshDatatype> out_hashes;
-            //std::vector<uint32_t> out_indices;
             tmp_hashes.reserve(hashes.size() + rebuilding_data_size);
             tmp_indices.reserve(hashes.size() + rebuilding_data_size);
-            // out_hashes.reserve(hashes.size() + rebuilding_data_size);
-            // out_indices.reserve(hashes.size() + rebuilding_data_size);
-
+            
             if (hashes.size() != 0) {
                 // Move data to temporary vector for sorting.
                 for (size_t i=SEGMENT_SIZE; i < hashes.size()-SEGMENT_SIZE; i++) {
@@ -203,18 +196,6 @@ namespace puffinn {
                 }
             }
             
-            //FIX ME 
-            //(they use 2 lists to alternate sorting i.e. we just need out hashes to contain the sorted values and idx to correspond to them)
-            //ALTERNATION
-            //implemented default sorting (i.e. sort_two_lists) instead of matteos noice histogram sorting
-
-            // puffinn::sort_hashes_pairs_24(
-            //     tmp_hashes,
-            //     out_hashes,
-            //     tmp_indices,
-            //     out_indices
-            // );
-
             puffinn::sort_two_lists(tmp_hashes, tmp_indices);
 
 
@@ -225,17 +206,11 @@ namespace puffinn {
             indices.clear();
             indices.reserve(tmp_hashes.size() + 2*SEGMENT_SIZE);
 
-            //FIX ME
-            //Contains the out_hashes in hashes padded with some huge boundary value - this should not be default as we no longer work with fixed sized hashes
-            
 
             for (int i=0; i < SEGMENT_SIZE; i++) {
                 hashes.push_back(IMPOSSIBLE_PREFIX);
                 indices.push_back(0);
             }
-
-            //ALTERNATION
-            //No longer uses out_indicies/hashes - just tmp_*
 
             for (size_t i = 0; i < tmp_hashes.size(); i++) {
                 indices.push_back(tmp_indices[i]);
@@ -286,6 +261,8 @@ namespace puffinn {
         // Assumes that everything in the current prefix is already searched. This is not true
         // in the first iteration, but will be after there has been a search each way.
         // As most queries need multiple iterations, this should not be a problem.
+        
+        
         std::pair<const uint32_t*, const uint32_t*> get_next_range(PrefixMapQuery& query) const {
             auto prev_mask = (query.prefix_mask >> 1);
             auto removed_bit = prev_mask & (-prev_mask); // Least significant bit
