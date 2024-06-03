@@ -630,7 +630,7 @@ namespace puffinn {
             size_t num_ranges = 0;
             // Empty ranges are discarded.
             // +1 to always allow safe access to the next range
-            std::unique_ptr<std::pair<const uint32_t*, const uint32_t*>[]> ranges;
+            std::unique_ptr<Range[]> ranges;
             // For each range, which table it was taken from.
             std::unique_ptr<uint_fast32_t[]> table_indices;
 
@@ -667,11 +667,13 @@ namespace puffinn {
 
                 num_ranges = 0;
                 for (uint_fast32_t j=0; j<maps.size(); j++) {
-                    auto range = maps[j].get_next_range(query_objects[j]);
-                    ranges[num_ranges] = range;
-                    table_indices[num_ranges] = j;
-                    // Skip empty ranges
-                    num_ranges += (range.first != range.second);
+                    std::vector<Range> ranges_local = maps[j].get_next_range(query_objects[j]);
+                    for(Range range : ranges_local){
+                        ranges[num_ranges] = range;
+                        table_indices[num_ranges] = j;
+                        // Skip empty ranges
+                        num_ranges += (range.first != range.second);
+                    }
                 }
                 // A large range that is never dereferenced, so that it will
                 // never advance further in the array.

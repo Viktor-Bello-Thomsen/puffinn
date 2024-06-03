@@ -15,6 +15,9 @@
 #include <ostream>
 #include <utility>
 #include <vector>
+#include <bitset>
+#include <iostream>
+
 
 namespace puffinn {
     // A query stores the hash, the current prefix as well as which segment in the map that has
@@ -168,9 +171,6 @@ namespace puffinn {
         }
 
         void rebuild() {
-            // A value whose prefix will never match that of a query vector, as long as less than 32
-            // hash bits are used.
-            
             
             size_t rebuilding_data_size = 0;
             for (auto & rd : parallel_rebuilding_data) {
@@ -263,46 +263,42 @@ namespace puffinn {
         // As most queries need multiple iterations, this should not be a problem.
         
         
-        std::pair<const uint32_t*, const uint32_t*> get_next_range(PrefixMapQuery& query) const {
-            auto prev_mask = (query.prefix_mask >> 1);
-            auto removed_bit = prev_mask & (-prev_mask); // Least significant bit
-            // The value of the removed bit.
-            // If a 0-bit is removed, search upwards, otherwise downwards.
-            // (Since we need to include all values with 1-bits, which are above)
-            // In the first iteration, where no bit is removed, this is 0.
-            auto bit_value = query.hash & removed_bit;
+        std::vector<Range> get_next_range(PrefixMapQuery& query) const {
+                        
+            //Removes the least significant hash i.e. shorten the prefix to consider less strict matches.
+            query.prefix_mask.pop_hash();
+            LshDatatype hash_code_prefix = (query.hash & query.prefix_mask);
 
-            auto hash_prefix = (query.hash & query.prefix_mask);
-            if (bit_value == 0) {
-                auto next_idx = query.prefix_end;
-                auto start_idx = next_idx;
-                while ((hashes[next_idx] & query.prefix_mask) == hash_prefix) {
-                    next_idx += SEGMENT_SIZE;
-                }
-                auto end_idx = next_idx;
-                if (end_idx >= indices.size()-SEGMENT_SIZE) {
-                    // Adjust the range so that no values in the padding are checked
-                    // However, next time the padding is reached it would cause end_idx < start_idx
-                    end_idx = std::max(start_idx, end_idx-SEGMENT_SIZE);
-                }
-                query.prefix_mask <<= 1;
-                return std::make_pair(&indices[start_idx], &indices[end_idx]);
-            } else {
-                auto next_idx = query.prefix_start-1;
-                auto end_idx = next_idx+1;
-                while ((hashes[next_idx] & query.prefix_mask) == hash_prefix) {
-                    next_idx -= SEGMENT_SIZE;
-                }
-                auto start_idx = next_idx+1;
-                if (start_idx < SEGMENT_SIZE) {
-                    start_idx = std::min(end_idx, start_idx+SEGMENT_SIZE);
-                }
-                query.prefix_mask <<= 1;
-                return std::make_pair(&indices[start_idx], &indices[end_idx]);
+            uint_fast32_t next_idx_right  = query.prefix_end;
+            uint_fast32_t start_idx_right = next_idx_right;
+            
+            
+            while (hash_code_prefix.prefix_eq(hashes[next_idx_right], query.prefix_mask)) {
+                next_idx_right += SEGMENT_SIZE;
             }
+            uint_fast32_t end_idx_right = next_idx_right;
+
+            if (end_idx_right >= indices.size()-SEGMENT_SIZE) {
+                // Adjust the range so that no values in the padding are checked
+                // However, next time the padding is reached it would cause end_idx < start_idx
+                end_idx_right = std::max(start_idx_right, end_idx_right-SEGMENT_SIZE);
+            }
+            
+            uint_fast32_t next_idx_left = query.prefix_start-1;
+            uint_fast32_t end_idx_left = next_idx_left+1;
+            while (hash_code_prefix.prefix_eq(hashes[next_idx_right], query.prefix_mask)) {
+                next_idx_left -= SEGMENT_SIZE;
+            }
+            uint_fast32_t start_idx_left = next_idx_left+1;
+            if (start_idx_left < SEGMENT_SIZE) {
+                start_idx_left = std::min(end_idx_left, start_idx_left+SEGMENT_SIZE);
+            }
+            Range left_range(&indices[start_idx_left], &indices[end_idx_left]);
+            Range right_range(&indices[start_idx_right], &indices[end_idx_right]);
+            return {left_range, right_range};
         }
 
-        std::pair<const uint32_t*, const uint32_t*> get_segment(size_t left, size_t right) {
+        Range get_segment(size_t left, size_t right) {
             return std::make_pair(&indices[left], &indices[right]);
         }
 

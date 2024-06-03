@@ -6,7 +6,8 @@ struct LshDatatype_DECL{
     
     virtual void concatenate_hashes(const std::vector<unsigned int>& indices, const uint64_t* hashes,const uint_fast8_t& bits_per_function) = 0;
     virtual void concatenate_hash(const uint64_t& hash,const uint_fast8_t& bits_per_function) = 0;
-    virtual void operator<<= (int bits) = 0;     
+    virtual void operator<<= (int bits) = 0;    
+    virtual void pop_hash() = 0; 
 
 };
 
@@ -56,7 +57,16 @@ public:
         }
         return res;
     }
+    //This is a hacky solution for now, this works because the function is only ever called for a prefix_mask which starts as all 1's
+    void pop_hash() {
+        this->value = this->value << 1;  
+    } 
     
+
+    bool prefix_eq(HammingType<dataType> other, HammingType<dataType> mask) const{
+        return this->value == (other & mask); 
+    }
+
     HammingType<dataType> interleave(const HammingType<dataType>& other) const {
         return this->value | other.getValue();
     }

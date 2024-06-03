@@ -18,6 +18,9 @@ namespace puffinn {
     // static const LshDatatype IMPOSSIBLE_PREFIX = 0xffffffffffffffff;
     static const LshDatatype IMPOSSIBLE_PREFIX = 0xffffffff;
 
+    //segments represent a continuous range of values (used in prefixmap)
+    typedef std::pair<const uint32_t*, const uint32_t*> Range;
+
 
     // The hash_pool concatenates hashes into a type twice as large to avoid overflow errors.
     
