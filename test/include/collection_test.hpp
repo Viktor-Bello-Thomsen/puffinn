@@ -9,7 +9,7 @@
 #include "puffinn/hash_source/tensor.hpp"
 #include "puffinn/similarity_measure/cosine.hpp"
 #include "puffinn/similarity_measure/jaccard.hpp"
-
+#include <iostream>
 #include <sstream>
 
 namespace collection {
@@ -88,7 +88,7 @@ namespace collection {
     void test_angular_search(
         int n,
         int dimensions,
-        std::unique_ptr<HashSourceArgs<T>> hash_source = std::unique_ptr<HashSourceArgs<T>>()
+        std::unique_ptr<HashSourceArgs<T, LshDatatype>> hash_source = std::unique_ptr<HashSourceArgs<T, LshDatatype>>()
     ) {
         const int NUM_SAMPLES = 100;
 
@@ -110,7 +110,7 @@ namespace collection {
         table.rebuild();
 
         for (auto k : ks) {
-            for (auto recall : recalls) {
+            for (auto recall : recalls) {                
                 int num_correct = 0;
                 auto adjusted_k = std::min(k, table.get_size());
                 
@@ -146,14 +146,14 @@ namespace collection {
         std::vector<int> dimensions = {5, 100};
 
         for (auto d : dimensions) {
-            std::unique_ptr<HashSourceArgs<SimHash>> args =
-                std::make_unique<HashPoolArgs<SimHash>>(3000);
+            std::unique_ptr<HashSourceArgs<SimHash, LshDatatype>> args =
+                std::make_unique<HashPoolArgs<SimHash, LshDatatype>>(3000);
             test_angular_search<SimHash, SimHash>(500, d, std::move(args));
 
-            args = std::make_unique<IndependentHashArgs<SimHash>>();
+            args = std::make_unique<IndependentHashArgs<SimHash, LshDatatype>>();
             test_angular_search<SimHash, SimHash>(500, d, std::move(args));
 
-            args = std::make_unique<TensoredHashArgs<SimHash>>();
+            args = std::make_unique<TensoredHashArgs<SimHash, LshDatatype>>();
             test_angular_search<SimHash, SimHash>(500, d, std::move(args));
         }
     }
@@ -162,15 +162,15 @@ namespace collection {
         std::vector<int> dimensions = {5, 100};
 
         for (auto d : dimensions) {
-            std::unique_ptr<HashSourceArgs<FHTCrossPolytopeHash>> args =
-                std::make_unique<HashPoolArgs<FHTCrossPolytopeHash>>(3000);
+            std::unique_ptr<HashSourceArgs<FHTCrossPolytopeHash, LshDatatype>> args =
+                std::make_unique<HashPoolArgs<FHTCrossPolytopeHash, LshDatatype>>(3000);
             test_angular_search<FHTCrossPolytopeHash, SimHash>(500, d, std::move(args));
 
-            args = std::make_unique<IndependentHashArgs<FHTCrossPolytopeHash>>();
+            args = std::make_unique<IndependentHashArgs<FHTCrossPolytopeHash, LshDatatype>>();
             test_angular_search<FHTCrossPolytopeHash, SimHash>(500, d, std::move(args));
 
 
-            args = std::make_unique<TensoredHashArgs<FHTCrossPolytopeHash>>();
+            args = std::make_unique<TensoredHashArgs<FHTCrossPolytopeHash, LshDatatype>>();
             test_angular_search<FHTCrossPolytopeHash, SimHash>(500, d, std::move(args));
         }
     }
@@ -178,8 +178,8 @@ namespace collection {
     void test_jaccard_search(
         int n,
         int dimensions,
-        std::unique_ptr<HashSourceArgs<MinHash>> hash_source =
-            std::unique_ptr<HashSourceArgs<MinHash>>()
+        std::unique_ptr<HashSourceArgs<MinHash, LshDatatype>> hash_source =
+            std::unique_ptr<HashSourceArgs<MinHash, LshDatatype>>()
     ) {
         const int NUM_SAMPLES = 500;
 
@@ -228,15 +228,15 @@ namespace collection {
         std::vector<int> dimensions = {100};
 
         for (auto d : dimensions) {
-            std::unique_ptr<HashSourceArgs<MinHash>> args =
-                std::make_unique<HashPoolArgs<MinHash>>(3000);
+            std::unique_ptr<HashSourceArgs<MinHash, LshDatatype>> args =
+                std::make_unique<HashPoolArgs<MinHash, LshDatatype>>(3000);
             test_jaccard_search(500, d, std::move(args));
 
-            args = std::make_unique<IndependentHashArgs<MinHash>>();
+            args = std::make_unique<IndependentHashArgs<MinHash, LshDatatype>>();
             test_jaccard_search(500, d, std::move(args));
 
 
-            args = std::make_unique<TensoredHashArgs<MinHash>>();
+            args = std::make_unique<TensoredHashArgs<MinHash, LshDatatype>>();
             test_jaccard_search(500, d, std::move(args));
         }
     }
@@ -291,8 +291,8 @@ namespace collection {
     template <typename T, typename H, typename S>
     void test_serialize(
         typename T::Format::Args args,
-        const HashSourceArgs<H>& hash_args,
-        const HashSourceArgs<S>& sketch_args
+        const HashSourceArgs<H, LshDatatype>& hash_args,
+        const HashSourceArgs<S, SketchDataType>& sketch_args
     ) {
         int k = 50;
 
@@ -323,16 +323,16 @@ namespace collection {
     TEST_CASE("Serialize") {
         test_serialize<CosineSimilarity>(
             100,
-            IndependentHashArgs<FHTCrossPolytopeHash>(),
-            IndependentHashArgs<SimHash>());
+            IndependentHashArgs<FHTCrossPolytopeHash, LshDatatype>(),
+            IndependentHashArgs<SimHash, SketchDataType>());
         test_serialize<CosineSimilarity>(
             100,
-            HashPoolArgs<CrossPolytopeHash>(3000),
-            HashPoolArgs<SimHash>(1000));
+            HashPoolArgs<CrossPolytopeHash, LshDatatype>(3000),
+            HashPoolArgs<SimHash, SketchDataType>(1000));
         test_serialize<JaccardSimilarity>(
             1000,
-            TensoredHashArgs<MinHash>(),
-            TensoredHashArgs<MinHash1Bit>());
+            TensoredHashArgs<MinHash, LshDatatype>(),
+            TensoredHashArgs<MinHash1Bit, SketchDataType>());
     }
 
     TEST_CASE("Serialize chunked") {
