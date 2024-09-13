@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdint>
 #include <random>
+#include <cassert>
 #include "puffinn/LshDatatypes/LshDatatype.hpp"
 
 namespace puffinn {
@@ -13,11 +14,11 @@ namespace puffinn {
 
     // Number of bits used in hashes.
     static const unsigned int MAX_HASHBITS = 24;
-    using LshDatatype = HammingType<uint32_t>;
-
-    // static const LshDatatype IMPOSSIBLE_PREFIX = 0xffffffffffffffff;
+    using LshDatatype = HammingType<uint32_t>; 
+    static const unsigned int BITS_PER_FUNCTION = 4;
     static const LshDatatype IMPOSSIBLE_PREFIX = 0xffffffff;
 
+    // static const LshDatatype IMPOSSIBLE_PREFIX = 0xffffffffffffffff;
     //segments represent a continuous range of values (used in prefixmap)
     typedef std::pair<const uint32_t*, const uint32_t*> Range;
 

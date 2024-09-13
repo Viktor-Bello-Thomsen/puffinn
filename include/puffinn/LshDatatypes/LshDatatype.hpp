@@ -1,13 +1,14 @@
 #pragma once
 
 #include <stdint.h>
+#include <puffinn/typedefs.hpp>
 
 struct LshDatatype_DECL{
     
     virtual void concatenate_hashes(const std::vector<unsigned int>& indices, const uint64_t* hashes,const uint_fast8_t& bits_per_function) = 0;
     virtual void concatenate_hash(const uint64_t& hash,const uint_fast8_t& bits_per_function) = 0;
     virtual void operator<<= (int bits) = 0;    
-    virtual void pop_hash() = 0; 
+    virtual void pop_hash(unsigned int bits) = 0; 
 
 };
 
@@ -40,13 +41,13 @@ public:
 
     void concatenate_hash(
         const uint64_t& hash,
-        const uint_fast8_t& bits_per_function
+        const uint_fast8_t& bits_per_func
     ) override {
-        this->value <<= bits_per_function;
+        this->value <<= bits_per_func;
         this->value |= hash; 
     }
 
-    HammingType<dataType> intersperse_zero() const {
+    HammingType intersperse_zero() const {
         dataType mask = 1;
         dataType shift = 0;
         dataType res = 0;
@@ -58,8 +59,8 @@ public:
         return res;
     }
     //This is a hacky solution for now, this works because the function is only ever called for a prefix_mask which starts as all 1's
-    void pop_hash() {
-        this->value = this->value << 1;  
+    void pop_hash(unsigned int bits) {
+        this->value = this->value << bits;  
     } 
     
 
@@ -67,7 +68,7 @@ public:
         return this->value == (other & mask); 
     }
 
-    HammingType<dataType> interleave(const HammingType<dataType>& other) const {
+    HammingType interleave(const HammingType<dataType>& other) const {
         return this->value | other.getValue();
     }
 
@@ -93,6 +94,10 @@ public:
 
     dataType getValue() const{
         return this->value;
+    }
+
+    dataType getBPF() const{
+        return this->bits_per_function;
     }
 
     bool operator< (HammingType<dataType> const& other) const {

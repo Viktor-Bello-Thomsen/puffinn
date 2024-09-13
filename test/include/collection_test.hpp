@@ -3,6 +3,7 @@
 #include "catch.hpp"
 #include "puffinn/collection.hpp"
 #include "puffinn/hash/simhash.hpp"
+#include "puffinn/hash/L2hash.hpp"
 #include "puffinn/hash/crosspolytope.hpp"
 #include "puffinn/hash_source/pool.hpp"
 #include "puffinn/hash_source/independent.hpp"
@@ -158,6 +159,7 @@ namespace collection {
         }
     }
 
+
     TEST_CASE("Index::search fht cross-polytope") {
         std::vector<int> dimensions = {5, 100};
 
@@ -287,6 +289,91 @@ namespace collection {
             REQUIRE(num_correct >= 0.8*expected_correct);
         }
     }
+
+
+    //Testing for L2 distance search
+
+    template <typename T, typename U>
+    void test_L2_search(
+        int n,
+        int dimensions,
+        std::unique_ptr<HashSourceArgs<T, LshDatatype>> hash_source = std::unique_ptr<HashSourceArgs<T, LshDatatype>>()
+    ) {
+        const int NUM_SAMPLES = 100;
+
+        std::vector<float> recalls = {0.2, 0.5, 0.95};
+        std::vector<unsigned int> ks = {1, 10};
+        std::pair<float, float> range = std::make_pair(0.0, 100000.0);
+
+        std::vector<std::vector<float>> inserted;
+        for (int i=0; i<n; i++) {
+            inserted.push_back(RealVectorFormat::generate_random_range(dimensions, range));
+        }
+
+        Index<L2Similarity, T, U> table(dimensions, 100*MB);
+        if (hash_source) {
+            table = Index<L2Similarity, T, U>(dimensions, 100*MB, *hash_source);
+        }
+        for (auto &vec : inserted) {
+            table.insert(vec);
+        }
+        table.rebuild();
+
+        for (auto k : ks) {
+            for (auto recall : recalls) {                
+                int num_correct = 0;
+                auto adjusted_k = std::min(k, table.get_size());
+                
+                float expected_correct = recall*adjusted_k*NUM_SAMPLES;
+                for (int sample=0; sample < NUM_SAMPLES; sample++) {
+                    auto query = RealVectorFormat::generate_random_range(dimensions,range);
+                    // std::cout << "Before Search" << std::endl;
+                    auto exact = table.search_bf(query, k);
+                    // std::cout << "Exact completed" << std::endl;
+                    auto res = table.search(query, k, recall);  
+                    // std::cout << "Search completed" << std::endl;
+                    
+
+                    REQUIRE(res.size() == static_cast<size_t>(adjusted_k));
+                    for (auto i : exact) {
+                        // Each expected value is returned once.
+                        if (std::count(res.begin(), res.end(), i) != 0) {
+                            num_correct++;
+                        }
+                    }
+                }
+                // Only fail if the recall is far away from the expectation.
+                REQUIRE(num_correct >= 0.8 * expected_correct);
+            }
+        }
+    }
+
+    // TEST_CASE("Index::search - empty") {
+    //     test_angular_search<SimHash, SimHash>(0, 2);
+    // }
+
+    // TEST_CASE("Index::search - 1 value") {
+    //     test_angular_search<SimHash, SimHash>(1, 5);
+    // }
+
+    TEST_CASE("Index::search L2hash") {
+        std::vector<int> dimensions = {25, 100};
+
+        for (auto d : dimensions) {
+            std::unique_ptr<HashSourceArgs<L2Hash, LshDatatype>> args =
+                std::make_unique<HashPoolArgs<L2Hash, LshDatatype>>(8000);
+            // test_L2_search<L2Hash, L2Hash>(500, d, std::move(args));
+
+            args = std::make_unique<IndependentHashArgs<L2Hash, LshDatatype>>();
+            test_L2_search<L2Hash, L2Hash>(500, d, std::move(args));
+
+            // args = std::make_unique<TensoredHashArgs<L2Hash, LshDatatype>>();
+            // test_L2_search<L2Hash, L2Hash>(500, d, std::move(args));
+        }
+    }
+
+
+
 
     template <typename T, typename H, typename S>
     void test_serialize(

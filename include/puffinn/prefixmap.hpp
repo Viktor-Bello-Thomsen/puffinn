@@ -266,7 +266,7 @@ namespace puffinn {
         std::vector<Range> get_next_range(PrefixMapQuery& query) const {
                         
             //Removes the least significant hash i.e. shorten the prefix to consider less strict matches.
-            query.prefix_mask.pop_hash();
+            query.prefix_mask.pop_hash(BITS_PER_FUNCTION);
             LshDatatype hash_code_prefix = (query.hash & query.prefix_mask);
 
             uint_fast32_t next_idx_right  = query.prefix_end;
