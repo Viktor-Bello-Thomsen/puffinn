@@ -63,6 +63,9 @@ public:
         this->value = this->value << bits;  
     } 
     
+    bool operator!=(const HammingType& other) const{
+        return this->value != other.getValue();
+    }
 
     bool prefix_eq(HammingType<dataType> other, HammingType<dataType> mask) const{
         return this->value == (other & mask); 
