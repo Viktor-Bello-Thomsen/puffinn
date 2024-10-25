@@ -523,7 +523,7 @@ private:
     }
 
     // No args
-    void set_hash_args(L2Hash::Args& args, const py::dict& ){
+    void set_hash_args(L2Hash::Args&, const py::dict&){
     }
 
     void set_hash_args(CrossPolytopeHash::Args& args, const py::dict& params) {

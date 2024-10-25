@@ -65,7 +65,7 @@ namespace puffinn {
             }
             return values;
         }
-
+    
 
         static std::vector<float> generate_random_range(unsigned int dimensions, std::pair<float, float> range){
             std::normal_distribution<float> normal_distribution(range.first, range.second);
@@ -76,6 +76,19 @@ namespace puffinn {
             }
             return values;
         }
+        
 
     };
+    template <>
+    std::vector<float> convert_stored_type<RealVectorFormat, std::vector<float>>(
+        typename RealVectorFormat::Type* storage,
+        DatasetDescription<RealVectorFormat> dataset
+    ) {
+        std::vector<float> res;
+        res.reserve(dataset.args);
+        for (size_t i=0; i < dataset.args; i++) {
+            res.push_back(storage[i]);
+        }
+        return res;
+    }
 }

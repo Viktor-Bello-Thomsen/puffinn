@@ -7,12 +7,11 @@
 
 namespace puffinn{
 
-
-
     class L2HashFunction{
     AlignedStorage<RealVectorFormat> hash_vec;
-    unsigned int dimensions, bits, ub;    
+    unsigned int dimensions, bits;    
     float r,b;
+    unsigned int ub;
     
     public:
         L2HashFunction(DatasetDescription<RealVectorFormat> dataset, unsigned int bits ,float r, float b)
@@ -55,7 +54,7 @@ namespace puffinn{
         uint64_t operator()(const float* const vec) const {
             auto dot = dot_product(hash_vec.get(), vec, dimensions); //could be just std::inner_product
             uint64_t bucket = std::floor((dot + b) / r); 
-            return (bucket < 0)? 0 : (bucket > ub)? ub : bucket; //every bucket outside the allowed bits are pushed into the limit_buckets. 
+            return (bucket > ub)? ub : bucket; //every bucket outside the allowed bits are pushed into the limit_buckets. 
         }    
 
         float getR(){
@@ -105,9 +104,9 @@ class L2Hash{
         L2HashFunction sample(){
             float r_tmp = 4.0;
             std::normal_distribution<float> normal_distribution(0.0, r_tmp);
+            auto& generator = get_default_random_generator();
             float b_tmp = normal_distribution(generator);
 
-            auto& generator = get_default_random_generator();
             return L2HashFunction(dataset, BITS_PER_FUNCTION, r_tmp, b_tmp); // see bits_per_function below;
         }
 
@@ -119,7 +118,7 @@ class L2Hash{
 
         //Similarity is know the value c, which is the distance/c; "distance" is the hashcode distance i.e. an integer.      
         //Currently assumes that r is the same across all concatenations and that num_bits is the number of concatenations
-
+    
         float collision_probability(float c_tmp, int_fast8_t num_bits) const {
             float c = c_tmp/4;
             if(c < 0.001f) return 1.0f;

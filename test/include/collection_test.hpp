@@ -261,7 +261,7 @@ namespace collection {
         int dims = 100;
         int n = 5000;
         float recall = 0.8;
-        int k = 10;
+        unsigned int k = 10;
         int samples = 100;
 
         Index<CosineSimilarity> index(dims, 512*MB);
